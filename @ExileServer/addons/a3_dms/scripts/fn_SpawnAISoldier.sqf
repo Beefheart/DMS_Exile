@@ -1,5 +1,5 @@
 /*
-	DMS_SpawnAISoldier
+	DMS_fnc_SpawnAISoldier
 	Created by eraser1
 	Based off of WAI
 
@@ -11,7 +11,7 @@
 		_difficulty,			// "random","hardcore","difficult","moderate", or "easy"
 		_side, 					// "bandit","hero", etc.
 		_customGearSet		// OPTIONAL: Manually defined AI gear.
-	] call DMS_SpawnAIGroup;
+	] call DMS_fnc_SpawnAIGroup;
 
 	Usage for _customGearSet:
 	[
@@ -79,14 +79,24 @@ removeGoggles _unit;
 // Give default items
 if !(DMS_ai_default_items isEqualTo []) then
 {
-	{_unit linkItem _x;false;} count DMS_ai_default_items;
+	{
+		// "Why doesn't linkItem work with any of these? Because fuck you, that's why" - BIS
+		if (_x in ["Binocular","Rangefinder","Laserdesignator","Laserdesignator_02","Laserdesignator_03"]) then
+		{
+			_unit addWeapon _x;
+		}
+		else
+		{
+			_unit linkItem _x;
+		};
+	} forEach DMS_ai_default_items;
 };
 
 
-call
+switch (toLower _type) do
 {
-	if (_type == "random") exitWith  { _type = DMS_random_AI call BIS_fnc_selectRandom;};
-	if (_type == "unarmed") exitWith { _type = "assault";_unarmed = true; };
+	case "random" :  {_type = DMS_random_AI call BIS_fnc_selectRandom;};
+	case "unarmed" : {_type = "assault";_unarmed = true;};
 };
 
 // Unit name
@@ -97,13 +107,24 @@ if (!_useCustomGear) then
 	if !(_type in DMS_ai_SupportedClasses) exitWith
 	{
 		diag_log format ["DMS ERROR :: DMS_SpawnAISoldier called with unsupported _type: %1 | _this: %2",_type,_this];
-	};// No more idiot-proofing for the following configs
+	};
+
 
 	// Equipment (Stuff that goes in the toolbelt slots)
-	{_unit linkItem _x;false;} count (missionNamespace getVariable [format ["DMS_%1_equipment",_type],[]]);
+	{
+		if (_x in ["Binocular","Rangefinder","Laserdesignator","Laserdesignator_02","Laserdesignator_03"]) then
+		{
+			_unit addWeapon _x;
+		}
+		else
+		{
+			_unit linkItem _x;
+		};
+	} forEach (missionNamespace getVariable [format ["DMS_%1_equipment",_type],[]]);
+
 
 	// Items (Loot stuff that goes in uniform/vest/backpack)
-	{_unit addItem _x;false;} count (missionNamespace getVariable [format ["DMS_%1_items",_type],[]]);
+	{_unit addItem _x;} forEach (missionNamespace getVariable [format ["DMS_%1_items",_type],[]]);
 
 
 	// Clothes
@@ -143,7 +164,7 @@ if (!_useCustomGear) then
 
 		if((random 100) <= (missionNamespace getVariable [format["DMS_%1_suppressor_chance",_type],0])) then
 		{
-			_suppressor = _weapon call DMS_FindSuppressor;
+			_suppressor = _weapon call DMS_fnc_FindSuppressor;
 			if(_suppressor != "") then
 			{
 				_unit addPrimaryWeaponItem _suppressor;
@@ -223,13 +244,12 @@ else
 
 	// Add Magazines before weapon so that gun will be loaded
 	{
-		if ((typeName _x) isEqualTo "STRING") then
+		if ((typeName _x) == "STRING") then
 		{
 			_x = [_x,1];
 		};
 		_unit addMagazines _x;
-		false;
-	} count _magazines;
+	} forEach _magazines;
 
 
 	// Add gun and attachments
@@ -239,8 +259,7 @@ else
 
 		{
 			_unit addPrimaryWeaponItem _x;
-			false;
-		} count _weaponAttachments;
+		} forEach _weaponAttachments;
 
 		_unit selectWeapon _weapon;
 	};
@@ -253,25 +272,22 @@ else
 
 		{
 			_unit addPrimaryWeaponItem _x;
-			false;
-		} count _pistolAttachments;
+		} forEach _pistolAttachments;
 	};
 
 	// Add items
 	{
 		_unit addItem _x;
-		false;
-	} count _items;
+	} forEach _items;
 };
 
 {
 	_unit setSkill [(_x select 0),(_x select 1)];
-	false;
-} count (missionNamespace getVariable [format["DMS_ai_skill_%1",_difficulty],[]]);
+} forEach (missionNamespace getVariable [format["DMS_ai_skill_%1",_difficulty],[]]);
 
 
 // Soldier killed event handler
-_unit addMPEventHandler ["MPKilled",'[_this, '+str _side+', "soldier"] call DMS_OnKilled;'];
+_unit addMPEventHandler ["MPKilled",'if (isServer) then {[_this, '+str _side+', "soldier"] call DMS_fnc_OnKilled;};'];
 
 _unit enableAI "TARGET";
 _unit enableAI "AUTOTARGET";

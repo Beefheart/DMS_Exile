@@ -1,5 +1,5 @@
 /*
-    DMS_CleanUp
+    DMS_fnc_CleanUp
     Created by eraser1
 
     Usage:
@@ -8,10 +8,10 @@
         _objectOrGroup2,
         ...
         _objectOrGroupN
-    ] call DMS_CleanUp;
+    ] call DMS_fnc_CleanUp;
 
     Alternative Usage:
-    _objectOrGroup call DMS_CleanUp;
+    _objectOrGroup call DMS_fnc_CleanUp;
 */
 
 
@@ -22,20 +22,8 @@ if (DMS_DEBUG) then
 
 if !((typeName _this) == "ARRAY") then
 {
-    if (DMS_DEBUG) then
-    {
-        diag_log ("DMS_DEBUG CleanUp :: Converting single object into array: "+str _this);
-    };
     _this = [_this];
 };
-
-
-/*
-if ([_this,20] call DMS_isPlayerNearbyARRAY) exitWith //<-----Not sure if it's more/less efficient
-{
-    [30, DMS_CleanUp, _this, false] call ExileServer_system_thread_addTask;
-};
-*/
 
 private ["_skippedObjects","_clean"];
 
@@ -63,7 +51,7 @@ _clean =
     {
         if (isNull _x) exitWith {};
 
-        if !([_x,DMS_CleanUp_PlayerNearLimit] call ExileServer_util_position_isPlayerNearby) then
+        if !([_x,DMS_CleanUp_PlayerNearLimit] call DMS_fnc_IsPlayerNearby) then
         {
             _x call _clean;
         }
@@ -85,8 +73,7 @@ _clean =
                 // Group cleanup should only be called when it has to be deleted regardless, so no need to check for nearby players
                 {
                     _x call _clean;
-                    false;
-                } count (units _x);
+                } forEach (units _x);
 
                 if(local _x)then
                 {
@@ -104,13 +91,11 @@ _clean =
             {
                 diag_log format ["DMS_DEBUG CleanUp :: Doing recursive call for ARRAY: %1",_x];
             };
-            _x call DMS_CleanUp;
+            _x call DMS_fnc_CleanUp;
         };
-        diag_log format ["DMS ERROR :: Attempted to call DMS_CleanUp on non- group or object %1 from array %2",_x,_this];
+        diag_log format ["DMS ERROR :: Attempted to call DMS_fnc_CleanUp on non- group or object %1 from array %2",_x,_this];
     };
-
-    false;
-} count _this;
+} forEach _this;
 
 
 if !(_skippedObjects isEqualTo []) then

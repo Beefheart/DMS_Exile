@@ -1,5 +1,5 @@
 /*
-	DMS_OnKilled
+	DMS_fnc_OnKilled
 	Created by eraser1 and Defent
 	Influenced by WAI
 
@@ -11,7 +11,7 @@
 		],
 		_side,				// "bandit" only for now
 		_type				// not currently used
-	] call DMS_OnKilled;
+	] call DMS_fnc_OnKilled;
 */
 
 
@@ -28,6 +28,7 @@ _player 	= _this select 0 select 1;
 _side 		= _this select 1;
 _type 		= _this select 2;
 _launcher 	= secondaryWeapon _unit;
+_playerObj	= objNull;
 
 if (isPlayer _player) then
 {
@@ -39,17 +40,20 @@ if (isPlayer _player) then
 			if (((position _x) distance (position _unit)) <= DMS_ai_share_info_distance ) then {
 				_x reveal [_player, 4.0];
 			};
-		} count allUnits;
+		} forEach allUnits;
 	};
 }
 else
 {
+	// Remove this due to reports of issues
+	/*
 	_playerObj = gunner _player;
 
 	if (isNull _playerObj) then
 	{
 		_playerObj = driver _player;
 	};
+	*/
 
 	if ((DMS_clear_AI_body && {(random 100) <= DMS_clear_AI_body_chance}) || {DMS_remove_roadkill && {(random 100) <= DMS_remove_roadkill_chance}}) then
 	{
@@ -64,15 +68,14 @@ else
 
 if(DMS_ai_remove_launchers && {_launcher != ""}) then
 {
-	_rockets = _launcher call DMS_selectMagazine;
+	_rockets = _launcher call DMS_fnc_selectMagazine;
 	_unit removeWeapon _launcher;
 	
 	{
 		if(_x == _rockets) then {
 			_unit removeMagazine _x;
 		};
-		false;
-	} count magazines _unit;
+	} forEach magazines _unit;
 };
 
 if(DMS_RemoveNVG) then
@@ -90,7 +93,7 @@ if (((count (units group _unit)) > 1) && {(leader group _unit) == _unit}) then
 
 
 
-if ((!isNull _playerObj) && {(getPlayerUID _playerObj) != ""}) then
+if ((!isNull _playerObj) && {((getPlayerUID _playerObj) != "") && {((vehicle _playerObj) == _playerObj)}}) then
 {
 	_moneyGain = missionNamespace getVariable [format ["DMS_%1MoneyGainOnKill",_side],0];
 	_repGain = missionNamespace getVariable [format ["DMS_%1RepGainOnKill",_side],0];

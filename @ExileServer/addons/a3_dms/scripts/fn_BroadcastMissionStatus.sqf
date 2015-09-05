@@ -1,9 +1,9 @@
 /*
-	DMS_BroadcastMissionStatus
+	DMS_fnc_BroadcastMissionStatus
 	Created by eraser1
 
 	Usage:	
-	_message call DMS_BroadcastMissionStatus;
+	_message call DMS_fnc_BroadcastMissionStatus;
 
 	Requires "DMS_PlayerNotificationTypes".
 
@@ -31,5 +31,4 @@ if ((typeName _this) != "STRING") then
 	] select (_x == "dynamicTextRequest");
 
 	_args call ExileServer_system_network_send_broadcast;
-	false;
-} count DMS_PlayerNotificationTypes;
+} forEach DMS_PlayerNotificationTypes;

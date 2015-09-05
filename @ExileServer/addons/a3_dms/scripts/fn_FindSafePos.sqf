@@ -1,12 +1,12 @@
 /*
-	DMS_findSafePos
+	DMS_fnc_findSafePos
 	Created by eraser1
 
 	Usage:
 	[
 		_nearestObjectMinDistance,	// (OPTIONAL) Number: Minimum distance from nearest object
 		_maxTerrainGradient			// (OPTIONAL) Number: Maximum terrain gradient (slope)
-	] call DMS_findSafePos;
+	] call DMS_fnc_findSafePos;
 */
 
 
@@ -32,13 +32,13 @@ while{!_validspot} do {
 	try
 	{
 		// Check for nearby water
-		if ([_pos,DMS_WaterNearBlacklist] call DMS_isNearWater) exitWith 
+		if ([_pos,DMS_WaterNearBlacklist] call DMS_fnc_isNearWater) exitWith 
 		{
 			throw ("water");
 		};
 		
 		// Check for nearby players
-		if ([_pos,DMS_PlayerNearBlacklist] call ExileServer_util_position_isPlayerNearby) exitWith
+		if ([_pos,DMS_PlayerNearBlacklist] call DMS_fnc_IsPlayerNearby) exitWith
 		{
 			throw ("players");
 		};
@@ -61,8 +61,7 @@ while{!_validspot} do {
 			{
 				throw ("another mission");
 			};
-			false;
-		} count allMapMarkers;
+		} forEach allMapMarkers;
 
 		// No exceptions found
 		_validspot	= true;
